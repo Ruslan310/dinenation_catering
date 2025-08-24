@@ -177,7 +177,7 @@ export default function CartPage() {
             <div className="checkout-summary">
               <div className="total-info">
                 <div className="total-label">Total to pay:</div>
-                <div className="total-amount">€{state.totalCartAmount}</div>
+                <div className="total-amount">€{state.totalCartAmount.toFixed(2)}</div>
               </div>
               <button
                 onClick={handlePlaceOrder}
