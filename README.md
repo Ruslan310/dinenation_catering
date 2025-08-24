@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DineNation - Restaurant Service
 
-## Getting Started
+Современный веб-сервис для ресторана с красивым дизайном и адаптивным интерфейсом.
 
-First, run the development server:
+## 🚀 Быстрый старт
 
+### Установка зависимостей
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Запуск в режиме разработки
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Сборка для продакшена
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🌐 Деплой на Amazon S3
 
-## Learn More
+### Автоматический деплой
+```bash
+./deploy.sh
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Ручной деплой
+1. Соберите проект: `npm run build`
+2. Загрузите файлы из `.next/static` в S3 bucket
+3. Настройте Static website hosting в S3
+4. Для полной функциональности настройте CloudFront
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Подробная инструкция
+См. файл `deploy-to-s3.md` для детального описания процесса деплоя.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ✨ Особенности
 
-## Deploy on Vercel
+- 🎨 Современный дизайн с градиентами и анимациями
+- 📱 Полностью адаптивный интерфейс
+- 🛒 Функциональная корзина с локальным хранилищем
+- 📋 Система заказов с последовательной нумерацией
+- 🖼️ Оптимизированные изображения с fallback
+- 🎯 Красивые модальные окна и формы
+- 🌐 Поддержка динамических роутов
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Технологии
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Стили**: SCSS с CSS переменными
+- **Состояние**: React Context API
+- **Хранение**: LocalStorage
+- **Изображения**: Next.js Image с оптимизацией
+
+## 📁 Структура проекта
+
+```
+src/
+├── app/                 # App Router страницы
+├── components/          # React компоненты
+├── contexts/           # React Context
+├── data/               # Данные меню
+├── types/              # TypeScript типы
+└── globals.scss        # Глобальные стили
+```
+
+## 🚀 Готово к деплою!
+
+Проект полностью настроен для деплоя на Amazon S3. Используйте `./deploy.sh` для автоматического деплоя или следуйте инструкции в `deploy-to-s3.md`.
