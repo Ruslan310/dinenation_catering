@@ -38,12 +38,15 @@ export interface Order {
   id: string;
   items: CartItem[];
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
   createdAt: Date;
   estimatedDeliveryTime?: Date;
   deliveryAddress?: string;
   customerName?: string;
   phoneNumber?: string;
+  email?: string;
+  stripeSessionId?: string;
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'cancelled';
 }
 
 export interface Category {

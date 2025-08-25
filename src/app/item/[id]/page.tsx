@@ -47,7 +47,7 @@ export default function ItemDetailPage() {
   }
 
   const handleAddToCart = () => {
-    const totalPrice = selectedItem.price + 
+    const totalPrice = selectedItem.price +
       selectedExtras.reduce((sum, extra) => sum + extra.price, 0) +
       selectedSauces.reduce((sum, sauce) => sum + sauce.price, 0);
 
@@ -62,7 +62,7 @@ export default function ItemDetailPage() {
     };
 
     addToCart(cartItem);
-    
+
     if (confirm('Item added to cart! Go to cart?')) {
       router.push('/cart');
     } else {
@@ -86,7 +86,7 @@ export default function ItemDetailPage() {
     }
   };
 
-  const totalPrice = selectedItem.price + 
+  const totalPrice = selectedItem.price +
     selectedExtras.reduce((sum, extra) => sum + extra.price, 0) +
     selectedSauces.reduce((sum, sauce) => sum + sauce.price, 0);
 
@@ -98,6 +98,15 @@ export default function ItemDetailPage() {
           <button
             onClick={() => router.back()}
             className="back-button"
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#f3f4f6',
+              color: '#374151',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              marginBottom: '1rem'
+            }}
           >
             <svg className="back-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

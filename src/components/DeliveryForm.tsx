@@ -9,7 +9,8 @@ interface DeliveryFormProps {
     onCancel: () => void;
     isLoading?: boolean;
     totalAmount: number;
-    onSubmit?: (data: DeliveryFormData) => void; // для совместимости
+    cartItems?: any[];
+    onCreateOrder?: (order: any) => void;
 }
 
 export interface DeliveryFormData {
@@ -18,15 +19,11 @@ export interface DeliveryFormData {
     email: string;
 }
 
-export default function DeliveryForm({
-                                         onCancel,
-                                         isLoading = false,
-                                         totalAmount,
-                                     }: DeliveryFormProps) {
+export default function DeliveryForm({ onCancel, isLoading = false, totalAmount, cartItems = [], onCreateOrder }: DeliveryFormProps) {
     const [formData, setFormData] = useState<DeliveryFormData>({
         name: '',
         phone: '',
-        email: '',
+        email: ''
     });
 
     const [errors, setErrors] = useState<Partial<DeliveryFormData>>({});
@@ -64,27 +61,27 @@ export default function DeliveryForm({
     // --- Handlers ---
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
 
         if (errors[name as keyof DeliveryFormData]) {
-            setErrors((prev) => ({ ...prev, [name]: '' }));
+            setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
     const handleBlur = (name: keyof DeliveryFormData) => {
-        setTouched((prev) => ({ ...prev, [name]: true }));
+        setTouched(prev => ({ ...prev, [name]: true }));
         const error = validateField(name, formData[name]);
-        setErrors((prev) => ({ ...prev, [name]: error }));
+        setErrors(prev => ({ ...prev, [name]: error }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate all fields
+        // Validate all
         const newErrors: Partial<DeliveryFormData> = {};
         let hasErrors = false;
 
-        (Object.keys(formData) as Array<keyof DeliveryFormData>).forEach((key) => {
+        (Object.keys(formData) as Array<keyof DeliveryFormData>).forEach(key => {
             const error = validateField(key, formData[key]);
             if (error) {
                 newErrors[key] = error;
@@ -101,23 +98,67 @@ export default function DeliveryForm({
         setProcessing(true);
 
         try {
+            console.log('Starting payment process...');
+            console.log('Form data:', formData);
+            console.log('Cart items:', cartItems);
+            console.log('Total amount:', totalAmount);
+
             const stripe = await stripePromise;
             if (!stripe) throw new Error('Stripe failed to load');
+            
+            console.log('Stripe loaded successfully');
 
-            const res = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, totalAmount }),
-            });
+            // Создаем заказ с ожиданием оплаты
+            const orderData = {
+                items: cartItems,
+                totalAmount,
+                customerName: formData.name,
+                phoneNumber: formData.phone,
+                email: formData.email,
+            };
 
-            const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
+            // Вызываем callback для создания заказа
+            if (onCreateOrder) {
+                const order = await onCreateOrder(orderData);
+                console.log('Order created:', order);
+
+                const requestBody = { 
+                    ...formData, 
+                    totalAmount, 
+                    items: cartItems,
+                    orderId: order.id 
+                };
+                console.log('Request body:', requestBody);
+
+                const res = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody),
+                });
+
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    throw new Error(data.error || `HTTP error! status: ${res.status}`);
+                }
+                
+                if (data.url) {
+                    // Небольшая задержка для сохранения заказа в localStorage
+                    setTimeout(() => {
+                        window.location.href = data.url;
+                    }, 100);
+                } else {
+                    console.error('Stripe session error:', data);
+                    throw new Error('No checkout URL received from Stripe');
+                }
             } else {
-                console.error('Stripe session error:', data);
+                throw new Error('Order creation callback not provided');
             }
         } catch (error) {
             console.error('Payment error:', error);
+            
+            // Показываем пользователю ошибку
+            alert(`Payment error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setProcessing(false);
         }

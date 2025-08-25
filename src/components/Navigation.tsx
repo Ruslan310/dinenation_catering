@@ -38,15 +38,15 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="navigation">
-      <div className="nav-content">
+    <nav className="navigation" suppressHydrationWarning>
+      <div className="nav-content" suppressHydrationWarning>
         {/* Logo/Brand */}
-        <div className="logo">
+        <div className="logo" suppressHydrationWarning>
           <span className="full-logo">DineNation</span>
         </div>
         
         {/* Navigation items */}
-        <div className="nav-items">
+        <div className="nav-items" suppressHydrationWarning>
           {navItems.map((item) => {
             const isActive = pathname === (item.href !== '/' ? `${item.href}/` : item.href);
             const isCart = item.href === '/cart';
@@ -57,7 +57,7 @@ export default function Navigation() {
                 href={item.href}
                 className={`nav-item ${isActive ? 'active' : ''}`}
               >
-                <div className="nav-icon">
+                <div className="nav-icon" suppressHydrationWarning>
                   {item.icon}
                   {isCart && <CartBadge />}
                 </div>
@@ -68,7 +68,7 @@ export default function Navigation() {
         </div>
         
          {/*Right side spacer*/}
-        <div className="nav-fix"></div>
+        <div className="nav-fix" suppressHydrationWarning></div>
       </div>
     </nav>
   );

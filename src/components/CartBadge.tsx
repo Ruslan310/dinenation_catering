@@ -12,7 +12,7 @@ export default function CartBadge() {
   if (cartItemsCount === 0) return null;
   
   return (
-    <div className="cart-badge">
+    <div className="cart-badge" suppressHydrationWarning>
       {cartItemsCount > 99 ? '99+' : cartItemsCount}
     </div>
   );

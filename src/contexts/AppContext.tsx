@@ -16,6 +16,7 @@ type AppAction =
   | { type: 'CLEAR_CART' }
   | { type: 'ADD_ORDER'; payload: Order }
   | { type: 'UPDATE_ORDER_STATUS'; payload: { orderId: string; status: Order['status'] } }
+  | { type: 'UPDATE_ORDER_PAYMENT_STATUS'; payload: { orderId: string; paymentStatus: Order['paymentStatus']; stripeSessionId?: string } }
   | { type: 'LOAD_STATE'; payload: { cart: CartItem[]; orders: Order[] } };
 
 const initialState: AppState = {
@@ -137,6 +138,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     }
     
+    case 'UPDATE_ORDER_PAYMENT_STATUS': {
+      const newOrders = state.orders.map(order =>
+        order.id === action.payload.orderId
+          ? { 
+              ...order, 
+              paymentStatus: action.payload.paymentStatus,
+              stripeSessionId: action.payload.stripeSessionId || order.stripeSessionId,
+              status: action.payload.paymentStatus === 'paid' ? 'processing' : order.status
+            }
+          : order
+      );
+      return {
+        ...state,
+        orders: newOrders,
+      };
+    }
+    
     case 'LOAD_STATE':
       const totalAmount = action.payload.cart.reduce((sum, item) => sum + item.totalPrice, 0);
       return {
@@ -159,7 +177,15 @@ interface AppContextType {
   updateCartItem: (id: string, quantity: number) => void;
   clearCart: () => void;
   addOrder: (order: Order) => Promise<void>;
+  createPendingOrder: (orderData: {
+    items: any[];
+    totalAmount: number;
+    customerName: string;
+    phoneNumber: string;
+    email: string;
+  }) => Promise<Order>;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
+  updateOrderPaymentStatus: (orderId: string, paymentStatus: Order['paymentStatus'], stripeSessionId?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -182,17 +208,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const cartData = localStorage.getItem('cart');
         const ordersData = localStorage.getItem('orders');
         
+        console.log('Loading state from localStorage:', { cartData, ordersData });
+        
         if (cartData || ordersData) {
           // Преобразуем строки дат обратно в объекты Date
           const parsedCart = cartData ? JSON.parse(cartData) : [];
           const parsedOrders = ordersData ? JSON.parse(ordersData) : [];
           
-          // Преобразуем даты в заказах
+          console.log('Parsed data:', { parsedCart, parsedOrders });
+          
+          // Преобразуем даты в заказах и добавляем недостающие поля
           const ordersWithDates = parsedOrders.map((order: Order) => ({
             ...order,
             createdAt: new Date(order.createdAt),
             estimatedDeliveryTime: order.estimatedDeliveryTime ? new Date(order.estimatedDeliveryTime) : undefined,
+            // Добавляем paymentStatus если его нет
+            paymentStatus: order.paymentStatus || 'pending',
+            // Добавляем email если его нет
+            email: order.email || '',
           }));
+          
+          console.log('Orders with dates:', ordersWithDates);
           
           dispatch({
             type: 'LOAD_STATE',
@@ -211,6 +247,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveState = () => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
+        console.log('Saving state to localStorage:', { cart: state.cart, orders: state.orders });
         localStorage.setItem('cart', JSON.stringify(state.cart));
         localStorage.setItem('orders', JSON.stringify(state.orders));
       }
@@ -241,10 +278,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const orderWithNumber = {
       ...order,
       id: `order-${orderNumber}`,
+      paymentStatus: 'pending' as const,
     };
     
     dispatch({ type: 'ADD_ORDER', payload: orderWithNumber });
     dispatch({ type: 'CLEAR_CART' });
+  };
+
+  // Функция для создания заказа с ожиданием оплаты
+  const createPendingOrder = async (orderData: {
+    items: any[];
+    totalAmount: number;
+    customerName: string;
+    phoneNumber: string;
+    email: string;
+  }) => {
+    const orderNumber = String(state.orders.length + 1).padStart(3, '0');
+    const order: Order = {
+      id: `order-${orderNumber}`,
+      items: orderData.items,
+      totalAmount: orderData.totalAmount,
+      status: 'pending',
+      paymentStatus: 'pending',
+      createdAt: new Date(),
+      customerName: orderData.customerName,
+      phoneNumber: orderData.phoneNumber,
+      email: orderData.email,
+    };
+    
+    console.log('Creating pending order:', order);
+    console.log('Current orders count:', state.orders.length);
+    console.log('Generated order ID:', order.id);
+    
+    dispatch({ type: 'ADD_ORDER', payload: order });
+    dispatch({ type: 'CLEAR_CART' });
+    
+    console.log('Order dispatched, returning:', order);
+    return order;
+  };
+
+  // Функция для обновления статуса оплаты заказа
+  const updateOrderPaymentStatus = (orderId: string, paymentStatus: Order['paymentStatus'], stripeSessionId?: string) => {
+    dispatch({ type: 'UPDATE_ORDER_PAYMENT_STATUS', payload: { orderId, paymentStatus, stripeSessionId } });
   };
 
   const updateOrderStatus = (orderId: string, status: Order['status']) => {
@@ -259,11 +334,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateCartItem,
     clearCart,
     addOrder,
+    createPendingOrder,
     updateOrderStatus,
+    updateOrderPaymentStatus,
   };
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider value={value} suppressHydrationWarning>
       {children}
     </AppContext.Provider>
   );

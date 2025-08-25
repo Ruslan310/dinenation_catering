@@ -19,9 +19,9 @@ export default function RootLayout({
     <SafeHtml>
       <SafeBody>
         <AppProvider>
-          <div style={{ minHeight: '100vh' }}>
+          <div style={{ minHeight: '100vh' }} suppressHydrationWarning>
             <Navigation />
-            <main>
+            <main suppressHydrationWarning>
               {children}
             </main>
           </div>

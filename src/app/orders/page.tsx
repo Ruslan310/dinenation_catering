@@ -7,6 +7,8 @@ const getStatusColor = (status: Order['status']) => {
   switch (status) {
     case 'pending':
       return 'pending';
+    case 'processing':
+      return 'processing';
     case 'confirmed':
       return 'confirmed';
     case 'preparing':
@@ -26,6 +28,8 @@ const getStatusIcon = (status: Order['status']) => {
   switch (status) {
     case 'pending':
       return '⏳';
+    case 'processing':
+      return '💳';
     case 'confirmed':
       return '✅';
     case 'preparing':
@@ -44,7 +48,9 @@ const getStatusIcon = (status: Order['status']) => {
 const getStatusText = (status: Order['status']) => {
   switch (status) {
     case 'pending':
-      return 'Awaiting confirmation';
+      return 'Awaiting payment';
+    case 'processing':
+      return 'Payment received';
     case 'confirmed':
       return 'Confirmed';
     case 'preparing':
@@ -62,13 +68,13 @@ const getStatusText = (status: Order['status']) => {
 
 export default function OrdersPage() {
   const appContext = useApp();
-  
+
   if (!appContext) {
     return (
-      <div className="empty-state">
-        <div className="empty-content">
-          <div style={{ animation: 'spin 1s linear infinite', borderRadius: '50%', height: '3rem', width: '3rem', border: '2px solid #3b82f6', borderTopColor: 'transparent', margin: '0 auto 1rem' }}></div>
-          <div style={{ fontSize: '1.5rem', color: '#6b7280', fontWeight: '500' }}>Loading app...</div>
+      <div className="empty-state" suppressHydrationWarning>
+        <div className="empty-content" suppressHydrationWarning>
+          <div style={{ animation: 'spin 1s linear infinite', borderRadius: '50%', height: '3rem', width: '3rem', border: '2px solid #3b82f6', borderTopColor: 'transparent', margin: '0 auto 1rem' }} suppressHydrationWarning></div>
+          <div style={{ fontSize: '1.5rem', color: '#6b7280', fontWeight: '500' }} suppressHydrationWarning>Loading app...</div>
         </div>
       </div>
     );
@@ -79,6 +85,7 @@ export default function OrdersPage() {
   const handleStatusUpdate = (orderId: string, currentStatus: Order['status']) => {
     const statusOptions = [
       'pending',
+      'processing',
       'confirmed',
       'preparing',
       'ready',
@@ -93,6 +100,8 @@ export default function OrdersPage() {
       updateOrderStatus(orderId, nextStatus as Order['status']);
     }
   };
+
+
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -117,88 +126,61 @@ export default function OrdersPage() {
             <p>{formatDate(order.createdAt)}</p>
           </div>
         </div>
-        
+
         <div className={`order-status ${getStatusColor(order.status)}`}>
           <span className="status-icon">{getStatusIcon(order.status)}</span>
           {getStatusText(order.status)}
         </div>
       </div>
 
-      {/* Order Info */}
-      <div className="order-content">
-        <div className="order-details-section">
-          <h4>
-            <span className="section-icon">💰</span>
-            Order Details
-          </h4>
-          <div className="details-list">
-            <div className="detail-row">
-              <span className="detail-label">Total Amount:</span>
-              <span className="detail-value">€{order.totalAmount.toFixed(2)}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Items:</span>
-              <span className="detail-value">{order.items.length}</span>
-            </div>
-          </div>
+      {/* Order Summary */}
+      <div className="order-summary">
+        <div className="summary-row">
+          <span>Total: €{order.totalAmount.toFixed(2)}</span>
+          <span>{order.items.length} items</span>
         </div>
-        
-        <div className="order-details-section">
-          <h4>
-            <span className="section-icon">👤</span>
-            Customer Info
-          </h4>
-          <div className="customer-info">
-            <div className="customer-name">{order.customerName}</div>
-            <div className="customer-contact">{order.phoneNumber}</div>
-            <div className="customer-contact">{order.deliveryAddress}</div>
-          </div>
+        <div className="summary-row">
+          <span>{order.customerName}</span>
+          <span className={`payment-status ${order.paymentStatus}`}>
+            {order.paymentStatus === 'pending' ? '⏳ Pending' : 
+             order.paymentStatus === 'paid' ? '✅ Paid' : 
+             order.paymentStatus === 'cancelled' ? '❌ Cancelled' : '❓ Unknown'}
+          </span>
         </div>
       </div>
 
-      {/* Items */}
-      <div className="order-items">
-        <h4>
-          <span className="items-icon">🍽️</span>
-          Order Items
-        </h4>
-        <div className="items-list">
-          {order.items.map((cartItem, index) => (
-            <div key={index} className="item-row">
-              <div className="item-info">
-                <span className="item-name">{cartItem.menuItem.name}</span>
-                <span className="item-quantity">x{cartItem.quantity}</span>
-              </div>
-              <span className="item-price">€{cartItem.totalPrice.toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
+      {/* Action Buttons */}
+      <div className="order-actions">
+        <button
+          onClick={() => window.location.href = `/orders/${order.id}`}
+          className="view-order-btn"
+        >
+          👁️ View Details
+        </button>
+        <button
+          onClick={() => handleStatusUpdate(order.id, order.status)}
+          className="update-status-btn"
+        >
+          Update Status
+        </button>
       </div>
-
-      {/* Update Status Button */}
-      <button
-        onClick={() => handleStatusUpdate(order.id, order.status)}
-        className="update-status-btn"
-      >
-        Update Status
-      </button>
     </div>
   );
 
   if (state.orders.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-content">
-          <div className="empty-icon">📋</div>
-          <h2>No orders yet</h2>
-          <p>Place your first order in the cart to see it here</p>
+      <div className="empty-state" suppressHydrationWarning>
+        <div className="empty-content" suppressHydrationWarning>
+          <div className="empty-icon" suppressHydrationWarning>📋</div>
+          <h2 suppressHydrationWarning>No orders yet</h2>
+          <p suppressHydrationWarning>Place your first order in the cart to see it here</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="orders-page">
+    <div className="orders-page" suppressHydrationWarning>
       {/* Header */}
       <div className="orders-header">
         <div className="header-content">
@@ -219,6 +201,7 @@ export default function OrdersPage() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

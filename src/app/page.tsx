@@ -41,7 +41,7 @@ export default function MenuPage() {
   };
 
   return (
-    <div className="main-content">
+    <div className="main-content" suppressHydrationWarning>
       {/* Hero Header */}
       <div className="hero-section">
         <div className="hero-content">
