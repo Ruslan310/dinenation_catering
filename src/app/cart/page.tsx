@@ -200,6 +200,7 @@ export default function CartPage() {
           onSubmit={handleDeliverySubmit}
           onCancel={() => setIsDeliveryModalOpen(false)}
           isLoading={isProcessing}
+          totalAmount={state.totalCartAmount}
         />
       </Modal>
     </div>
