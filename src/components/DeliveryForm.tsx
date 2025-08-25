@@ -9,6 +9,7 @@ interface DeliveryFormProps {
     onCancel: () => void;
     isLoading?: boolean;
     totalAmount: number;
+    onSubmit?: (data: DeliveryFormData) => void; // для совместимости
 }
 
 export interface DeliveryFormData {
@@ -17,11 +18,15 @@ export interface DeliveryFormData {
     email: string;
 }
 
-export default function DeliveryForm({ onCancel, isLoading = false, totalAmount }: DeliveryFormProps) {
+export default function DeliveryForm({
+                                         onCancel,
+                                         isLoading = false,
+                                         totalAmount,
+                                     }: DeliveryFormProps) {
     const [formData, setFormData] = useState<DeliveryFormData>({
         name: '',
         phone: '',
-        email: ''
+        email: '',
     });
 
     const [errors, setErrors] = useState<Partial<DeliveryFormData>>({});
@@ -59,27 +64,27 @@ export default function DeliveryForm({ onCancel, isLoading = false, totalAmount 
     // --- Handlers ---
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
 
         if (errors[name as keyof DeliveryFormData]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+            setErrors((prev) => ({ ...prev, [name]: '' }));
         }
     };
 
     const handleBlur = (name: keyof DeliveryFormData) => {
-        setTouched(prev => ({ ...prev, [name]: true }));
+        setTouched((prev) => ({ ...prev, [name]: true }));
         const error = validateField(name, formData[name]);
-        setErrors(prev => ({ ...prev, [name]: error }));
+        setErrors((prev) => ({ ...prev, [name]: error }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate all
+        // Validate all fields
         const newErrors: Partial<DeliveryFormData> = {};
         let hasErrors = false;
 
-        (Object.keys(formData) as Array<keyof DeliveryFormData>).forEach(key => {
+        (Object.keys(formData) as Array<keyof DeliveryFormData>).forEach((key) => {
             const error = validateField(key, formData[key]);
             if (error) {
                 newErrors[key] = error;
