@@ -8,40 +8,22 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         console.log('Request body:', body);
-        console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
-        console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
-        
+
         if (!process.env.STRIPE_SECRET_KEY) {
             throw new Error('STRIPE_SECRET_KEY is not configured');
         }
-        
         if (!process.env.NEXT_PUBLIC_APP_URL) {
             throw new Error('NEXT_PUBLIC_APP_URL is not configured');
         }
 
-        // Валидация входных данных
         if (!body.totalAmount || body.totalAmount <= 0) {
             throw new Error('Invalid total amount');
         }
-        
-        if (!body.email) {
-            throw new Error('Email is required');
-        }
-        
-        if (!body.name) {
-            throw new Error('Name is required');
-        }
-        
-        if (!body.phone) {
-            throw new Error('Phone is required');
-        }
-        
-        if (!body.orderId) {
-            throw new Error('Order ID is required');
-        }
+        if (!body.email) throw new Error('Email is required');
+        if (!body.name) throw new Error('Name is required');
+        if (!body.phone) throw new Error('Phone is required');
+        if (!body.orderId) throw new Error('Order ID is required');
 
-        console.log('----body.totalAmount', body.totalAmount)
-        console.log('----body.totalAmoun1111t', Math.round(body.totalAmount * 100))
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
@@ -77,21 +59,24 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ url: session.url });
-    } catch (err: any) {
-        console.error("Stripe error:", err);
-        console.error("Error details:", {
-            message: err.message,
-            type: err.type,
-            code: err.code,
-            statusCode: err.statusCode
-        });
-        return NextResponse.json({ 
-            error: err.message,
-            details: {
-                type: err.type,
-                code: err.code,
-                statusCode: err.statusCode
-            }
-        }, { status: 500 });
+    } catch (err: unknown) {
+        if (err instanceof Stripe.errors.StripeError) {
+            // Stripe-specific error
+            console.error("Stripe error:", err.message, err.type, err.code);
+            return NextResponse.json(
+                { error: err.message, details: { type: err.type, code: err.code } },
+                { status: 500 }
+            );
+        }
+
+        if (err instanceof Error) {
+            // General error
+            console.error("General error:", err.message);
+            return NextResponse.json({ error: err.message }, { status: 500 });
+        }
+
+        // Fallback
+        console.error("Unknown error:", err);
+        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }

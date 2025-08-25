@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { menuItems, extraIngredients, sauces } from '@/data/menuData';
 import { MenuItem, ExtraIngredient, Sauce, CartItem } from '@/types';

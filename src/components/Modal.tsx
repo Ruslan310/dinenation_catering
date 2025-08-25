@@ -52,8 +52,8 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   return createPortal(
     <div className="modal-overlay">
       <div className="modal-backdrop" onClick={onClose} />
-      {/*<div className={`modal-container ${sizeClasses[size]}`}>*/}
-      <div className={`modal-container`}>
+      <div className={`modal-container ${sizeClasses[size]}`}>
+      {/*<div className={`modal-container`}>*/}
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
           <button className="modal-close-btn" onClick={onClose}>

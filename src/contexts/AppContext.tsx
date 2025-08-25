@@ -178,7 +178,7 @@ interface AppContextType {
   clearCart: () => void;
   addOrder: (order: Order) => Promise<void>;
   createPendingOrder: (orderData: {
-    items: any[];
+    items: CartItem[];
     totalAmount: number;
     customerName: string;
     phoneNumber: string;
@@ -287,7 +287,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Функция для создания заказа с ожиданием оплаты
   const createPendingOrder = async (orderData: {
-    items: any[];
+    items: CartItem[];
     totalAmount: number;
     customerName: string;
     phoneNumber: string;
@@ -340,7 +340,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={value} suppressHydrationWarning>
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

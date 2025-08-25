@@ -2,15 +2,23 @@
 
 import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import {CartItem, Order} from "@/types";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface DeliveryFormProps {
+    onSubmit: (formData: DeliveryFormData) => Promise<void>; // 👈 добавляем
     onCancel: () => void;
     isLoading?: boolean;
     totalAmount: number;
-    cartItems?: any[];
-    onCreateOrder?: (order: any) => void;
+    cartItems?: CartItem[];
+    onCreateOrder?: (orderData: {
+        items: CartItem[];
+        totalAmount: number;
+        customerName: string;
+        phoneNumber: string;
+        email: string;
+    }) => Promise<Order>;
 }
 
 export interface DeliveryFormData {
@@ -105,7 +113,7 @@ export default function DeliveryForm({ onCancel, isLoading = false, totalAmount,
 
             const stripe = await stripePromise;
             if (!stripe) throw new Error('Stripe failed to load');
-            
+
             console.log('Stripe loaded successfully');
 
             // Создаем заказ с ожиданием оплаты
@@ -122,11 +130,11 @@ export default function DeliveryForm({ onCancel, isLoading = false, totalAmount,
                 const order = await onCreateOrder(orderData);
                 console.log('Order created:', order);
 
-                const requestBody = { 
-                    ...formData, 
-                    totalAmount, 
+                const requestBody = {
+                    ...formData,
+                    totalAmount,
                     items: cartItems,
-                    orderId: order.id 
+                    orderId: order.id
                 };
                 console.log('Request body:', requestBody);
 
@@ -137,11 +145,11 @@ export default function DeliveryForm({ onCancel, isLoading = false, totalAmount,
                 });
 
                 const data = await res.json();
-                
+
                 if (!res.ok) {
                     throw new Error(data.error || `HTTP error! status: ${res.status}`);
                 }
-                
+
                 if (data.url) {
                     // Небольшая задержка для сохранения заказа в localStorage
                     setTimeout(() => {
@@ -156,7 +164,7 @@ export default function DeliveryForm({ onCancel, isLoading = false, totalAmount,
             }
         } catch (error) {
             console.error('Payment error:', error);
-            
+
             // Показываем пользователю ошибку
             alert(`Payment error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
