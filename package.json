@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "export": "next build && next export",
-    "deploy": "git pull && npm install && rm -rf .next && npm run build && pm2 restart nextapp",
+    "deploy": "git pull && npm ci && rm -rf .next && npm run build && pm2 restart nextapp",
     "lint": "eslint"
   },
   "dependencies": {
